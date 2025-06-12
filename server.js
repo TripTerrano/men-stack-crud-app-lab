@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Starship = require("./models/starship");
 
 const express = require("express");
-
+const ejs = require("ejs");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -23,7 +23,15 @@ app.get("/starships", async (req, res) => {
   if (starships.length === 0) {
     console.log("No starships found.");
   }
-  res.send(starships);
+  res.send(
+    starships.map((starship) => ({
+      id: starship._id,
+      name: starship.name,
+      captain: starship.captain,
+      class: starship.class,
+      crewSize: starship.crewSize,
+    }))
+  );
 });
 
 app.put("/starships/:id", async (req, res) => {
@@ -89,6 +97,65 @@ app.delete("/starships/:id", async (req, res) => {
   } catch (err) {
     console.error("Error deleting starship:", err.message);
     res.status(500).send("Error deleting starship.");
+  }
+});
+
+app.set("view engine", "ejs");
+app.get("/", async (req, res) => {
+  const starships = await fetch("http://localhost:3000/starships")
+    .then((response) => response.json())
+    .catch((err) => {
+      console.error("Error fetching starships:", err);
+      return [];
+    });
+  console.log("Starships fetched:", starships);
+  const html = await ejs.renderFile(
+    "views/index.ejs",
+    {
+      title: "Starship Management",
+      starships,
+    },
+    {
+      async: true,
+      cache: false,
+    }
+  );
+  res.send(html);
+});
+app.get("/new", (req, res) => {
+  res.render("new", { title: "Create New Starship" });
+});
+
+app.get("/:id", async (req, res) => {
+  const starshipId = req.params.id;
+  try {
+    const starship = await Starship.findById(starshipId);
+    if (!starship) {
+      return res.status(404).send("Starship not found.");
+    }
+    const html = await ejs.renderFile(
+      "views/starship.ejs",
+      { title: "Starship Details", starship },
+      { async: true, cache: false }
+    );
+    res.send(html);
+  } catch (err) {
+    console.error("Error fetching starship:", err.message);
+    res.status(500).send("Error fetching starship.");
+  }
+});
+
+app.get("/:id/edit", async (req, res) => {
+  const starshipId = req.params.id;
+  try {
+    const starship = await Starship.findById(starshipId);
+    if (!starship) {
+      return res.status(404).send("Starship not found.");
+    }
+    res.render("edit", { title: "Edit Starship", starship });
+  } catch (err) {
+    console.error("Error fetching starship for edit:", err.message);
+    res.status(500).send("Error fetching starship for edit.");
   }
 });
 

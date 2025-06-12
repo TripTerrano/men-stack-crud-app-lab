@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Starship Details</h1>
+    <div>
+        <h2><%= starship.name %></h2>
+        <p><strong>Captain:</strong> <%= starship.captain %></p>
+        <p><strong>Class:</strong> <%= starship.class %></p>
+        <p><strong>Crew Size:</strong> <%= starship.crewSize %></p>
+        <a href="/<%= starship._id %>/edit">Edit Starship</a>
+            <form id="form">
+     
+
+      <button type="submit">Delete Starship</button>
+    </form>
+    <script>
+      document
+        .getElementById("form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+
+          fetch("http://localhost:3000/starships/<%= starship._id %>", {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data._id) {
+                window.location.href = "/";
+              } else {
+                alert("Error deleting starship");
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+    </script>
+        <a href="/">Back to Home</a>
+</body>
+</html>
